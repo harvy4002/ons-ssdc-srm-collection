@@ -1,0 +1,10 @@
+{
+  "test_supplier": {
+    "sftpDirectory": "foo",
+    "encryptionKeyFilename": "bar"
+  },
+  "internal_reprographics": {
+    "sftpDirectory": "foo",
+    "encryptionKeyFilename": "bar"
+  }
+}

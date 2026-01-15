@@ -1,0 +1,13 @@
+package uk.gov.ons.ssdc.supporttool.model.dto.ui;
+
+public enum JobStatusDto {
+  FILE_UPLOADED,
+  STAGING_IN_PROGRESS,
+  VALIDATION_IN_PROGRESS,
+  VALIDATED_OK,
+  VALIDATED_WITH_ERRORS,
+  VALIDATED_TOTAL_FAILURE,
+  PROCESSING_IN_PROGRESS,
+  PROCESSED,
+  CANCELLED
+}

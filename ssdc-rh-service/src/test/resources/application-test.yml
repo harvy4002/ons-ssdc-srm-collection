@@ -1,0 +1,31 @@
+spring:
+  cloud:
+    gcp:
+      pubsub:
+        emulator-host: localhost:18538
+        project-id: our-project
+
+firestore:
+  project-id: our-project
+  emulator-host: localhost:18542
+
+queueconfig:
+  case-update-topic: event_case-update
+  uac-update-topic: event_uac-update
+  collection-exercise-update-topic: event_collection-exercise-update
+
+cloud-storage:
+  case-schema-name: case
+  uac-schema-name: uac
+  backoff:
+    initial: 100
+    multiplier: 1.0
+    max: 1000
+    max-attempts: 5
+
+
+jwt_keys: src/test/resources/eq-keys.json
+jwt_decrypt_keys: src/test/resources/eq-decrypt-keys.json
+
+eq:
+  response-id-pepper: SRM_PLACEHOLDER

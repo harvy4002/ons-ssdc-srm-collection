@@ -1,0 +1,9 @@
+spring:
+  cloud:
+    gcp:
+      pubsub:
+        emulator-host: localhost:8538
+        project-id: our-project
+
+iap-enforced: false # This ** MUST ALWAYS!! ** be true in production!!!
+

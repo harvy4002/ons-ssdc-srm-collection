@@ -1,0 +1,23 @@
+{%- extends 'base.html' -%}
+
+{% set page_title_value = _('ONS Surveys') %}
+
+{%- block main -%}
+    
+    <h1
+    data-ga= "error", 
+    data-ga-category= "server-error", 
+    data-ga-label= "500_internal_server_error" 
+    >
+        {{ _('Sorry, something went wrong') }}
+    </h1>
+
+    <p>{{ _('We are experiencing some technical problems.') }}</p>
+
+    {%- autoescape false -%}
+        {% set contact_us_link = _('https://www.ons.gov.uk/aboutus/contactus/surveyenquiries') %}
+        <p>{{ _('Please try again later, or %(open)scontact us%(close)s if the problem continues.',
+         open='<a href="%s">' % contact_us_link, close='</a>')|safe }}</p>
+    {%- endautoescape -%}
+
+{%- endblock main -%}

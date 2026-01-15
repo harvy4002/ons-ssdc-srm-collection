@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flask = "*"
+structlog = "*"
+flask-babel = "*"
+requests = "*"
+gunicorn = "*"
+flask-talisman = "*"
+
+[dev-packages]
+flake8 = "*"
+vulture = "*"
+pytest = "*"
+pytest-cov = "*"
+
+[requires]
+python_version = "3.12"

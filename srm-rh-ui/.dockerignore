@@ -1,0 +1,10 @@
+Dockerfile
+.github
+tests/
+.flake8
+.gitignore
+LICENSE
+Makefile
+Pipfile
+README.md
+whitelist.py

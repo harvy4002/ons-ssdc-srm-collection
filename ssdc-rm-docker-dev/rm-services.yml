@@ -1,0 +1,400 @@
+version: "3.4"
+services:
+  caseprocessor:
+    container_name: caseprocessor
+    image: europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/ssdc-rm-caseprocessor
+    external_links:
+      - postgres
+      - uacqid
+      - pubsub-emulator
+    environment:
+      - SPRING_CLOUD_GCP_PUBSUB_EMULATOR_HOST=pubsub-emulator:8538
+      - SPRING_CLOUD_GCP_PUBSUB_PROJECT-ID=our-project
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=disable
+      - UACSERVICE_CONNECTION_HOST=${UAC_HOST}
+      - UACSERVICE_CONNECTION_PORT=${UAC_PORT}
+      - EXCEPTIONMANAGER_CONNECTION_HOST=${EXCEPTIONMANAGER_HOST}
+      - EXCEPTIONMANAGER_CONNECTION_PORT=${EXCEPTIONMANAGER_PORT}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - CASEREFGENERATORKEY=${CASEREFGENERATORKEY}
+      - MESSAGELOGGING_LOGSTACKTRACES=true
+    healthcheck:
+      test: [ "CMD", "find", "/tmp/case-processor-healthy", "-mmin", "-1" ]
+      interval: 60s
+      timeout: 10s
+      retries: 10
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 500M
+        reservations:
+          cpus: '0.5'
+          memory: 500M
+
+
+  uacqid:
+    container_name: uacqid
+    image: europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/ssdc-rm-uac-qid-service
+    ports:
+      - "${UAC_PORT}:8164"
+    external_links:
+      - postgres
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=disable
+      - JAVA_TOOL_OPTIONS=-Xmx128m -Xdebug -Dspring.profiles.active=dev
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+    restart: always
+    volumes:
+      - ./java_healthcheck:/opt/healthcheck/
+    healthcheck:
+      test: [ "CMD", "java", "-jar", "/opt/healthcheck/HealthCheck.jar", "http://localhost:8164/actuator/health" ]
+      interval: 60s
+      timeout: 10s
+      retries: 4
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 400M
+        reservations:
+          cpus: '0.3'
+          memory: 400M
+
+  exceptionmanager:
+    container_name: exceptionmanager
+    image: europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/ssdc-rm-exception-manager
+    ports:
+      - "${EXCEPTIONMANAGER_PORT}:8666"
+    restart: always
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=disable
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./java_healthcheck:/opt/healthcheck/
+    healthcheck:
+      test: [ "CMD", "java", "-jar", "/opt/healthcheck/HealthCheck.jar", "http://localhost:8666/actuator/health" ]
+      interval: 60s
+      timeout: 10s
+      retries: 4
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 400M
+        reservations:
+          cpus: '0.2'
+          memory: 400M
+
+  exportfileservice:
+    container_name: exportfileservice
+    image: europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/ssdc-rm-export-file-service
+    external_links:
+      - pubsub-emulator
+    environment:
+      - READINESS_FILE_PATH=/tmp/ready
+      - ENVIRONMENT=DEV
+      - EXCEPTIONMANAGER_CONNECTION_HOST=${EXCEPTIONMANAGER_HOST}
+      - EXCEPTIONMANAGER_CONNECTION_PORT=${EXCEPTIONMANAGER_PORT}
+      - DESTINATION_CONFIG_JSON_PATH=/home/export-file-service/dummy_destination_config.json
+      - DESTINATION_KEY_DIRECTORY=/home/export-file-service/dummy_keys
+      - DB_HOST=${POSTGRES_HOST}
+      - DB_PORT=${POSTGRES_PORT}
+      - DB_USERNAME=${POSTGRES_USERNAME}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_DATABASE=${POSTGRES_DATABASE}
+      - FILE_UPLOAD_DESTINATION=/home/export-file-service/export_files
+      - FILE_UPLOAD_MODE=LOCAL
+    restart: always
+    healthcheck:
+      test: sh -c "[ -f /tmp/ready ]"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 50s
+    volumes:
+      - ./dummy_keys:/home/export-file-service/dummy_keys
+      - ./dummy_destination_config.json:/home/export-file-service/dummy_destination_config.json
+      - ~/Documents/export_files:/home/export-file-service/export_files
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 500M
+        reservations:
+          cpus: '0.2'
+          memory: 500M
+
+  supporttool:
+    container_name: supporttool
+    image: europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/ssdc-rm-support-tool
+    ports:
+      - "9999:9999"
+    external_links:
+      - pubsub-emulator
+      - postgres
+    environment:
+      - SPRING_CLOUD_GCP_PUBSUB_EMULATOR_HOST=pubsub-emulator:8538
+      - SPRING_CLOUD_GCP_PUBSUB_PROJECT-ID=our-project
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=disable
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - NOTIFYSERVICE_CONNECTION_HOST=${NOTIFY_SERVICE_HOST}
+      - NOTIFYSERVICE_CONNECTION_PORT=${NOTIFY_SERVICE_PORT}
+      - DUMMYUSERIDENTITY=${DUMMY_USER}
+      - IAP_ENFORCED=false
+      - EXPORTFILEDESTINATIONCONFIGFILE=/home/supporttool/dummy_destination_config.json
+      - NOTIFYSERVICECONFIGFILE=/home/supporttool/dummy-notify-config.json
+      - EXCEPTIONMANAGER_CONNECTION_HOST=${EXCEPTIONMANAGER_HOST}
+      - EXCEPTIONMANAGER_CONNECTION_PORT=${EXCEPTIONMANAGER_PORT}
+    restart: always
+    healthcheck:
+      test: [ "CMD", "java", "-jar", "/opt/healthcheck/HealthCheck.jar", "http://localhost:9999/actuator/health" ]
+      interval: 60s
+      timeout: 10s
+      retries: 4
+      start_period: 50s
+    volumes:
+      - ./java_healthcheck:/opt/healthcheck/
+      - ./dummy_destination_config.json:/home/supporttool/dummy_destination_config.json
+      - ./dummy-notify-config.json:/home/supporttool/dummy-notify-config.json
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 400M
+        reservations:
+          cpus: '0.3'
+          memory: 400M
+
+  notifyservice:
+    container_name: notifyservice
+    image: europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/ssdc-rm-notify-service
+    ports:
+      - "${NOTIFY_SERVICE_PORT}:8162"
+    external_links:
+      - postgres
+      - pubsub-emulator
+    environment:
+      - SPRING_CLOUD_GCP_PUBSUB_EMULATOR_HOST=pubsub-emulator:8538
+      - SPRING_CLOUD_GCP_PUBSUB_PROJECT_ID=our-project
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=disable
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - UACSERVICE_CONNECTION_HOST=${UAC_HOST}
+      - UACSERVICE_CONNECTION_PORT=${UAC_PORT}
+      - NOTIFYSERVICECONFIGFILE=/home/notifyservice/dummy-notify-config.json
+      - EXCEPTIONMANAGER_CONNECTION_HOST=${EXCEPTIONMANAGER_HOST}
+      - EXCEPTIONMANAGER_CONNECTION_PORT=${EXCEPTIONMANAGER_PORT}
+      - MESSAGELOGGING_LOGSTACKTRACES=true
+    restart: always
+    volumes:
+      - ./java_healthcheck:/opt/healthcheck/
+      - ./dummy-notify-config.json:/home/notifyservice/dummy-notify-config.json
+    healthcheck:
+      test: [ "CMD", "java", "-jar", "/opt/healthcheck/HealthCheck.jar", "http://localhost:8162/actuator/health" ]
+      interval: 60s
+      timeout: 10s
+      retries: 4
+      start_period: 50s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 400M
+        reservations:
+          cpus: '0.5'
+          memory: 400M
+
+  jobprocessor:
+    container_name: jobprocessor
+    image: europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/ssdc-rm-job-processor
+    external_links:
+      - pubsub-emulator
+      - postgres
+    environment:
+      - SPRING_CLOUD_GCP_PUBSUB_EMULATOR_HOST=pubsub-emulator:8538
+      - SPRING_CLOUD_GCP_PUBSUB_PROJECT-ID=our-project
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=disable
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+    restart: always
+    healthcheck:
+      test: [ "CMD", "find", "/tmp/job-processor-healthy", "-mmin", "-1" ]
+      interval: 60s
+      timeout: 10s
+      retries: 10
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 400M
+        reservations:
+          cpus: '0.5'
+          memory: 400M
+
+  rh-service:
+    container_name: rh-service
+    image: europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/ssdc-rh-service:latest
+    ports:
+      - "${RH_SERVICE_PORT}:8071"
+    environment:
+      - spring.cloud.gcp.pubsub.emulator-host=pubsub-emulator:8538
+      - spring.cloud.gcp.pubsub.project-id=our-project
+      - firestore.project-id=our-project
+      - FIRESTORE_EMULATOR_HOST=firestore-emulator:8540
+      - GOOGLE_APPLICATION_CREDENTIALS=/gcp/config/google-credentials.json
+      - GOOGLE_CLOUD_PROJECT=dummy-local
+      - EXCEPTIONMANAGER_CONNECTION_HOST=${EXCEPTIONMANAGER_HOST}
+      - EXCEPTIONMANAGER_CONNECTION_PORT=${EXCEPTIONMANAGER_PORT}
+      - EQ_RESPONSE-ID-PEPPER=TABASCO_SAUCE
+      - JWT_KEYS=/home/rh-service/keys/eq-keys.json
+      - MESSAGELOGGING_LOGSTACKTRACES=true
+    volumes:
+      - type: bind
+        source: ./fake-service-account.json # The spring Firestore client requires google credentials, give it a dummy account locally
+        target: /gcp/config/google-credentials.json
+      - ./java_healthcheck:/opt/healthcheck
+      - ./dummy_keys:/home/rh-service/keys
+    restart: always
+    healthcheck:
+      test: [ "CMD", "java", "-jar", "/opt/healthcheck/HealthCheck.jar", "http://localhost:8071/actuator/health" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 400M
+        reservations:
+          cpus: '0.2'
+          memory: 400M
+  rh-ui:
+    container_name: rh-ui
+    image: europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/srm-rh-ui:latest
+    environment:
+      - APP_CONFIG=DevelopmentConfig
+      - PORT=9092
+      - RH_SVC_URL=http://rh-service:8071
+    ports:
+      - "${RH_UI_PORT}:9092"
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request as r; r.urlopen('http://localhost:9092/info')" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 250M
+        reservations:
+          cpus: '0.2'
+          memory: 250M
+
+  support-api:
+    container_name: support-api
+    image: europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/srm-support-api:latest
+    environment:
+      - APP_CONFIG=DevelopmentConfig
+      - PORT=${SUPPORT_API_PORT}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DB=${POSTGRES_DATABASE}
+      - POSTGRES_USER=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}
+      - LOCAL_SAMPLE_FILES_PATH=/home/support-api/sample_files
+      - PUBSUB_EMULATOR_HOST=pubsub-emulator:8538
+      - PROJECT_ID=our-project
+    ports:
+      - "${SUPPORT_API_PORT}:9095"
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request as r; r.urlopen('http://localhost:9095/info/')" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    volumes:
+      - ./dummy_sample_files:/home/support-api/sample_files
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 250M
+        reservations:
+          cpus: '0.2'
+          memory: 250M
+
+  support-frontend:
+    container_name: support-frontend
+    image: europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/srm-support-frontend:latest
+    environment:
+      - APP_CONFIG=DevelopmentConfig
+      - PORT=${SUPPORT_FRONTEND_PORT}
+      - SUPPORT_API_URL=http://support-api:9095
+      - DEBUG=False
+    ports:
+      - "${SUPPORT_FRONTEND_PORT}:9096"
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request as r; r.urlopen('http://localhost:9096/info/')" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 250M
+        reservations:
+          cpus: '0.2'
+          memory: 250M
+
+  autoprocessor:
+    container_name: autoprocessor
+    image: europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/srm-autoprocessor
+    environment:
+      - ENVIRONMENT=DEV
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DATABASE}
+      - SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}
+      - SAMPLE_LOCATION=/home/autoprocessor/sample_files
+      - READINESS_FILE_PATH=/tmp/ready
+    restart: always
+    healthcheck:
+      test: sh -c "[ -f /tmp/ready ]"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 50s
+    volumes:
+      - ./dummy_sample_files:/home/autoprocessor/sample_files
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 500M
+        reservations:
+          cpus: '0.2'
+          memory: 500M
+
+networks:
+  default:
+    external: true
+    name: ssdcrmdockerdev_default
+volumes:
+  dummy_keys:

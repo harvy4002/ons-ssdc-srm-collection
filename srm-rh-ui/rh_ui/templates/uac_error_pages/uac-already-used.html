@@ -1,0 +1,31 @@
+{%- extends 'base.html' -%}
+{% from "components/breadcrumbs/_macro.njk" import onsBreadcrumbs %}
+
+{% set page_title_value = _('Error - ONS Surveys') %}
+
+{%- block preMain -%}
+    {{ onsBreadcrumbs({
+            "ariaLabel": _('Back'),
+            "itemsList": [
+                {
+                    "url": url_for('i18n.start_bp.start_get'),
+                    "id": "back",
+                    "text": _('Back'),
+                }
+            ]
+        }) }}
+{%- endblock -%}
+
+{%- block main -%}
+
+    <h1
+        data-ga= "error", 
+        data-ga-category= "UAC-error", 
+        data-ga-label= "uac_already_used_error" 
+    >
+    {{ _('This access code has already been used') }}
+    </h1>
+
+    <p>{{ _('Someone has already submitted a response using this access code.') }}</p>
+
+{%- endblock main -%}

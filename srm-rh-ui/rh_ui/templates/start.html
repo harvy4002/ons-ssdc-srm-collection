@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% from "components/access-code/_macro.njk" import onsAccessCode %}
+{% from "components/button/_macro.njk" import onsButton %}
+{% from "components/details/_macro.njk" import onsDetails %}
+
+{%- set error_uac = None -%}
+{%- set page_title_value = _('Start study - ONS Surveys') -%}
+
+{% set flashed_messages = get_flashed_messages() %}
+
+{% if flashed_messages %}
+    {% set page_title_value = _('Error: Start study - ONS Surveys') %}
+
+    {% if 'uac_empty' in flashed_messages %}
+        {% set error_uac = {
+        'id': 'uac_empty',
+        'text': _('Enter an access code'),
+        'attributes': {
+            "data-ga": "error", 
+            "data-ga-category": "UAC-error", 
+            "data-ga-label": "uac_empty_error" 
+        } 
+        } %}
+    {% elif 'uac_invalid_length' in flashed_messages %}
+        {% set error_uac = {
+        'id': 'uac_invalid_length',
+        'text': _('Enter a 16-character access code'),
+        'attributes': {
+            "data-ga": "error", 
+            "data-ga-category": "UAC-error", 
+            "data-ga-label": "uac_invalid_length_error" 
+        } 
+        } %}
+    {% elif 'uac_invalid' in flashed_messages %}
+        {% set error_uac = {
+        'id': 'uac_invalid', 
+        'text': _('Access code not recognised. Enter the code again.'),
+        'attributes': {
+            "data-ga": "error", 
+            "data-ga-category": "UAC-error", 
+            "data-ga-label": "uac_invalid_error" 
+        } 
+        } %}
+    {% endif %}
+
+{% endif %}}
+
+
+
+{% block main %}
+    {% include 'partials/uac_error_message_list.html' with context %}
+
+    <h1 class="ons-u-fs-2xl ons-u-mt-3xl">{{ _('Start study') }}</h1>
+
+    <form method="POST" action={{  url_for('i18n.start_bp.start_post')}}>
+    {{ onsAccessCode({
+            "id": "uac",
+            "name": "uac",
+            
+            "label": {
+                "text": _("Enter your 16-character access code"),
+                "description": _('Keep this code safe. You will need to enter it every time you access your study')
+            },
+
+            "securityMessage": _('Your personal information is protected by law and will be kept confidential.'),
+
+            "error": error_uac
+
+    }) }}
+
+    {{ onsButton({
+            'id': 'submit_uac_btn',
+            'text': _('Access study'),
+            'classes': 'ons-u-mb-3xl',
+            'name': 'action[save_continue]',
+            "variants": 'loader'
+    }) }}
+    </form>
+
+
+    <h2 class="ons-u-fs-xl ons-u-mt-xl" id="find_access_code">{{ _('Where to find your access code') }}</h2>
+    <p>{{ _('Your access code can be found in the invitation letter or email you received.
+            Your 16-character access code will be a combination of letters and numbers.') }}</p>
+
+    {%- set further_info_content -%}
+    <p>{{ _('Telephone: +44 0808 196 1270<br>9am to 4:30pm Monday to Thursday<br>9am to 3pm Friday') }}</p>
+    <p>{{ _('Minicom (for the deaf and hearing impaired): 18001 +44 800 085 7376') }}</p>
+    <p>{{ _('Email:') }} <a href="mailto: surveyfeedback@ons.gov.uk">surveyfeedback@ons.gov.uk</a></p>
+    {%- endset -%}
+
+    {{ onsDetails({
+            "headingLevel": "3",
+            "id": "details",
+            "title": _('Who can I contact for further information?'),
+            "content": further_info_content
+        }) }}
+
+{% endblock %}

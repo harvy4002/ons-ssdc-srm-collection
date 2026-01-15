@@ -1,0 +1,118 @@
+{%- extends 'layout/_template.njk' -%}
+
+
+{% block head %}
+    {% set g_tag_id = config.GOOGLE_TAG_ID %}
+    {% if g_tag_id %}
+        {% set script_src_url = "https://www.googletagmanager.com/gtag/js?id=" + g_tag_id %}
+
+        <!-- Google tag (gtag.js) -->
+        <script nonce="{{ csp_nonce() }}" async src={{ script_src_url }}></script>
+        <script nonce="{{ csp_nonce() }}">
+        var allowTrackingCookies = /^(.*)?\s*'usage':true\s*[^;]+(.*)?$/;
+
+        if (document.cookie.match(allowTrackingCookies)) {
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', "{{ g_tag_id }}");
+        }
+        </script>
+    {% endif %}
+{% endblock%}
+
+
+{%- block preHeader -%}
+    {%- autoescape false -%}
+        {% set cookiesPageURL = url_for('i18n.info_pages_bp.cookies') %}
+        {%- from 'components/cookies-banner/_macro.njk' import onsCookiesBanner -%}
+        {{ onsCookiesBanner({
+                'lang': g.lang_code,
+                'statementTitle': _('Cookies'),
+                'serviceName': '',
+                'settingsLinkUrl': cookiesPageURL,
+                'statementText': _("To collect information about how you use this website, we use%(open_cookies_link)s cookies.%(close_link)s</br>
+                                This information helps us improve our services and make sure that the website works as well as possible.",
+                                open_cookies_link='<a href="%s">' % cookiesPageURL, close_link='</a>'),
+                'preferencesText':  _("You can %(open_cookies_link)s change your cookie preferences%(close_link)s at any time.",open_cookies_link='<a href="%s">' % cookiesPageURL, close_link='</a>')
+                }) }}
+    {% endautoescape %}
+{%- endblock -%}
+
+
+{%- set language = { 'languages':
+    [
+        {
+            "url": '/en/' + '/'.join(request.path.split('/')[2:]),
+            "isoCode": "en",
+            "text": "English",
+            "current":  g.lang_code == 'en'
+        },
+        {
+            "url": '/cy/' + '/'.join(request.path.split('/')[2:]),
+            "isoCode": "cy",
+            "text": "Cymraeg",
+            "current": g.lang_code == 'cy'
+            }
+    ]
+}-%}
+
+
+{%- set footer_content = {
+    'newTabWarning': _('The following links open in a new tab'),
+    'crest': true,
+    'rows': [
+        {
+            'itemsList': [
+                {
+                    'text': _('About ONS studies'),
+                    'url': _('https://www.ons.gov.uk/surveys/informationforhouseholdsandindividuals'),
+                    'target': '_blank'
+                },
+                {
+                    'text': _('Accessibility statement'),
+                    'url': _('https://www.ons.gov.uk/help/accessibility'),
+                    'target': '_blank'
+                },
+                {
+                    'text': _('Contact us'),
+                    'url': _('https://www.ons.gov.uk/aboutus/contactus/surveyenquiries'),
+                    'target': '_blank'
+                }
+            ]
+        }
+    ],
+    'legal': [
+        {
+            'itemsList': [
+                {
+                    'text': _('Cookies'),
+                    'url': url_for('i18n.info_pages_bp.cookies'),
+                },
+                {
+                    'text': _('Privacy and data protection'),
+                    'url': url_for('i18n.info_pages_bp.privacy_and_data_protection'),
+                }
+            ]
+        }
+    ],
+    'copyrightDeclaration': {
+        'copyright': _('Crown copyright and database rights 2020 OS 100019153.'),
+        'text': ""
+    }
+}-%}
+
+
+{%- set pageConfig = {
+    'title': page_title_value,
+    'header': {
+        'mastheadLogoUrl': _('https://www.ons.gov.uk/'),
+        'title': _('ONS Surveys'),
+        'language': language,
+        'mastheadLogo' : {},
+        'titleLogo' : {}
+    },
+    'footer': footer_content,
+    'cspNonce': csp_nonce(),
+    'meta' : {}
+} -%}

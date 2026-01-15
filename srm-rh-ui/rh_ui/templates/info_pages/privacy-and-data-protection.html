@@ -1,0 +1,82 @@
+{%- extends 'base.html' -%}
+{% from "components/breadcrumbs/_macro.njk" import onsBreadcrumbs %}
+{% from "components/list/_macro.njk" import onsList %}
+
+{% set page_title_value = _("Privacy and data protection") %}
+
+{%- block preMain -%}
+    {{ onsBreadcrumbs({
+            "ariaLabel": _('Back'),
+            "itemsList": [
+                {
+                    "url": url_for('i18n.start_bp.start_get'),
+                    "id": "back",
+                    "text": _('Back'),
+                }
+            ]
+        }) }}
+{%- endblock -%}
+
+{% block main %}
+<h1 class="ons-u-fs-xl">{{ _('Privacy and data protection') }}</h1>
+
+<p>{{ _('We will keep your information secure and confidential. This means that we will:') }}</p>
+{%- autoescape false -%}
+{{ onsList({
+            "itemsList": [
+                {
+                    "text": _('recognise that you are sharing personal information with us and treat it as confidential, as directed
+                        by the<a href="https://code.statisticsauthority.gov.uk/" target="_blank"> Code of Practice for Statistics</a>')
+                },
+                {
+                    "text": _('only use your information for statistical purposes, or to help us run our surveys')
+                },
+                {
+                    "text": _('not publish anything that identifies an individual, household or business')
+                },
+                {
+                    "text": _('only hold your information for as long as it is being used for producing statistics')
+                },
+                {
+                    "text": _('provide survey information to
+                        <a href="https://www.ons.gov.uk/aboutus/whatwedo/statistics/requestingstatistics/accesstounpublishedonsresearchdatabygovernmentorganisationsforstatisticalresearch" target="_blank">
+                            other government departments, approved organisations</a> and
+                        <a href="https://www.ons.gov.uk/aboutus/whatwedo/statistics/requestingstatistics/approvedresearcherscheme" target="_blank"> approved researchers</a>
+                            for statistical purposes only, subject to the same standards of
+                        protection we apply (and according to the provisions of the Data Protection Legislation,
+                        the Statistics and Registration Service Act 2007 and the Code of Practice for Statistics')
+                },
+                {
+                    "text": _('ensure our staff are aware of their obligations to protect your confidential information')
+                },
+                {
+                    "text": _('maintain the security of our systems and our buildings')
+                }
+            ]
+        }) }}
+{%- endautoescape -%}
+
+<h2>{{ _('Access to information') }}</h2>
+<p>{{ _('We employ third-party providers to assist us in survey data collection. These third parties work under our instruction,
+        and are strictly used as technical service providers in a capacity as a data processor.
+        We retain your data and control how this is used. The third parties we work with are:') }}</p>
+{{ onsList({
+            "itemsList": [
+                {
+                    "text": 'Google Cloud Platform service'
+                },
+                {
+                    "text": 'GOV.UK Notify'
+                }
+            ]
+        }) }}
+
+{%- autoescape false -%}
+
+<h2 class="ons-u-fs-xl ons-u-mt-xl">{{ _('Further information') }}</h2>
+<p>{{ _('If you have a question about how we process your data or want to find out more about your rights
+        under data protection legislation, see our <a href="https://www.ons.gov.uk/aboutus/transparencyandgovernance/dataprotection" target="_blank">protection page</a>.') }}
+</p>
+{%- endautoescape -%}
+
+{% endblock main %}

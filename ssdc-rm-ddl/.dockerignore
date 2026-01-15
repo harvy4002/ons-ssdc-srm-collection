@@ -1,0 +1,11 @@
+# Ignore everything...
+*
+# ... exept for:
+!groundzero_ddl/
+!patches/
+!config.py
+!ui-permissions/
+!build_groundzero_ddl.sh
+!patch_database.py
+!rollback_database.py
+!Pipfile*

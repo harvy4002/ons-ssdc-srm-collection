@@ -1,0 +1,181 @@
+name: HTTP security response headers test suites
+# TOOLS
+# VENOM HOME: https://github.com/ovh/venom
+
+vars:
+  # The target URL must be substituted in before running these tests
+  # e.g. using sed like such `sed -e "s|<VENOM_TARGET_URL>|https://example-rh-ui/en/start|" <./tests/venom_tests.yml> > example_venom_tests.yml`
+  target_site: <VENOM_TARGET_URL>
+  request_timeout_in_seconds: 20
+testcases:
+  ###############################################
+  ## ACTIVE RECOMMENDED AND WORKING DRAFT HEADERS
+  ###############################################
+  - name: Strict-Transport-Security
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.strict-transport-security ShouldNotBeNil
+          - result.headers.strict-transport-security ShouldEqual "max-age=31536000; includeSubDomains"
+  - name: X-Frame-Options
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.x-frame-options ShouldNotBeNil
+          - result.headers.x-frame-options ShouldBeIn "deny" "DENY"
+  - name: X-Content-Type-Options
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.x-content-type-options ShouldNotBeNil
+          - result.headers.x-content-type-options ShouldEqual "nosniff"
+  - name: Content-Security-Policy
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.content-security-policy ShouldNotBeNil
+          - result.headers.content-security-policy ShouldNotContainSubstring "unsafe"
+  - name: X-Permitted-Cross-Domain-Policies
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.x-permitted-cross-domain-policies ShouldNotBeNil
+          - result.headers.x-permitted-cross-domain-policies ShouldEqual "None"
+  - name: Referrer-Policy
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.referrer-policy ShouldNotBeNil
+          - result.headers.referrer-policy ShouldEqual "strict-origin-when-cross-origin"
+  - name: Cross-Origin-Opener-Policy
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.cross-origin-opener-policy ShouldNotBeNil
+          - result.headers.cross-origin-opener-policy ShouldEqual "same-origin"
+  - name: Cross-Origin-Resource-Policy
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.cross-origin-resource-policy ShouldNotBeNil
+          - result.headers.cross-origin-resource-policy ShouldEqual "same-site"
+  - name: Permissions-Policy
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.permissions-policy ShouldNotBeNil
+          - result.headers.permissions-policy ShouldEqual "accelerometer=(),autoplay=(),camera=(),display-capture=(),document-domain=(),encrypted-media=(),fullscreen=(),geolocation=(),gyroscope=(),magnetometer=(),microphone=(),midi=(),payment=(),picture-in-picture=(),publickey-credentials-get=(),screen-wake-lock=(),sync-xhr=(self),usb=(),xr-spatial-tracking=()"
+  - name: Cache-Control
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.cache-control ShouldNotBeNil
+          - 'result.headers.cache-control ShouldEqual "no-store max-age=0"'
+  - name: Feature-Policy
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        info: >-
+          (Checking that Feature Policy is not in the header)
+          This header has now been renamed to Permissions-Policy in the
+          specification.
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.feature-policy ShouldBeNil
+  - name: Public-Key-Pins
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        info: >-
+          (Checking that Public Key Pins is not in the header)
+          This header has been deprecated by all major browsers and is no longer
+          recommended. Avoid using it, and update existing code if possible!
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.public-key-pins ShouldBeNil
+  - name: Expect-CT
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        info: >-
+          (Checking that Expect CT is not in the header)
+          This header will likely become obsolete in June 2021. Since May 2018
+          new certificates are expected to support SCTs by default. Certificates
+          before March 2018 were allowed to have a lifetime of 39 months, those
+          will all be expired in June 2021.
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.expect-ct ShouldBeNil
+  - name: X-Xss-Protection
+    steps:
+      - type: http
+        method: GET
+        url: '{{.target_site}}'
+        skip_body: true
+        info: >-
+          (Checking that X-XSS Protection is not in the header)
+          The X-XSS-Protection header has been deprecated by modern browsers and
+          its use can introduce additional security issues on the client side.
+        timeout: '{{.request_timeout_in_seconds}}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.headers.x-xss-protection ShouldBeNil

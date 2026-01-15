@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:16437/rm
+
+  cloud:
+    gcp:
+      pubsub:
+        emulator-host: localhost:18541
+        project-id: our-project
+
+# for wiremock server
+exception-manager:
+  connection:
+    host: localhost
+    port: 8667
+    scheme: http
+
+
+iap-enforced: false # This ** MUST ALWAYS!! ** be true in production!!!
+dummyuseridentity: integration-tests@testymctest.com

@@ -1,0 +1,30 @@
+{%- from './components/panel/_macro.njk' import onsPanel -%}
+{%- from './components/list/_macro.njk' import onsList -%}
+
+{% if error_uac %}
+    {%
+    call onsPanel({
+        'title': _('There is a problem with this page'),
+        'variant': 'error'
+    })
+    %}
+
+    {{
+    onsList({
+        'element': 'ol',
+        'itemsList': [ 
+            {
+                'text': error_uac['text'],
+                'url': '#' + error_uac['id'],
+                'variants': 'inPageLink'
+            }
+        ]
+    })
+    }}
+    
+    {% endcall %}
+{% endif %}
+
+
+
+

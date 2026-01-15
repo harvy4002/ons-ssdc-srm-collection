@@ -1,0 +1,27 @@
+DO $$
+BEGIN
+    CREATE ROLE rm_read_only;
+    EXCEPTION WHEN duplicate_object THEN RAISE NOTICE '%, re-applying role grants and privileges', SQLERRM USING ERRCODE = SQLSTATE;
+END
+$$;
+
+GRANT CONNECT ON DATABASE rm TO rm_read_only;
+
+GRANT USAGE ON SCHEMA casev3 TO rm_read_only;
+GRANT USAGE ON SCHEMA exceptionmanager TO rm_read_only;
+GRANT USAGE ON SCHEMA uacqid TO rm_read_only;
+GRANT USAGE ON SCHEMA ddl_version TO rm_read_only;
+
+GRANT SELECT ON ALL TABLES IN SCHEMA casev3 TO rm_read_only;
+GRANT SELECT ON ALL SEQUENCES IN SCHEMA casev3 TO rm_read_only;
+GRANT SELECT ON ALL TABLES IN SCHEMA exceptionmanager TO rm_read_only;
+GRANT SELECT ON ALL SEQUENCES IN SCHEMA exceptionmanager TO rm_read_only;
+GRANT SELECT ON ALL TABLES IN SCHEMA uacqid TO rm_read_only;
+GRANT SELECT ON ALL SEQUENCES IN SCHEMA uacqid TO rm_read_only;
+GRANT SELECT ON ALL TABLES IN SCHEMA ddl_version TO rm_read_only;
+GRANT SELECT ON ALL SEQUENCES IN SCHEMA ddl_version TO rm_read_only;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA casev3 GRANT SELECT ON TABLES TO rm_read_only;
+ALTER DEFAULT PRIVILEGES IN SCHEMA exceptionmanager GRANT SELECT ON TABLES TO rm_read_only;
+ALTER DEFAULT PRIVILEGES IN SCHEMA uacqid GRANT SELECT ON TABLES TO rm_read_only;
+ALTER DEFAULT PRIVILEGES IN SCHEMA ddl_version GRANT SELECT ON TABLES TO rm_read_only;

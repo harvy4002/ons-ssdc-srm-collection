@@ -1,0 +1,24 @@
+{%- extends 'base.html' -%}
+
+{% set page_title_value = _('ONS Surveys') %}
+
+{%- block main -%}
+
+        <h1
+        data-ga= "error", 
+        data-ga-category= "server-error", 
+        data-ga-label= "404_page_not_pound" 
+        >
+        {{ _('Page not found') }}
+        </h1>
+
+        <p>{{ _('If you entered a web address, check it is correct.') }}</p>
+        <p>{{ _('If you pasted the web address, check you copied the whole address.') }}</p>
+
+        {%- autoescape false -%}
+                {% set contact_us_link = _('https://www.ons.gov.uk/aboutus/contactus/surveyenquiries') %}
+                <p>{{ _('If the web address is correct or you selected a link or button, %(open)scontact us%(close)s for more help.', open='<a href="%s">'
+                        % contact_us_link, close='</a>')|safe }}</p>
+        {%- endautoescape -%}
+
+{%- endblock -%}

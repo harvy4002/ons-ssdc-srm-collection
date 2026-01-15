@@ -1,0 +1,67 @@
+server:
+  port: 8071
+
+spring:
+  task:
+    scheduling:
+      pool:
+        size: 30
+  cloud:
+    gcp:
+      pubsub:
+        subscriber:
+          flow-control:
+            max-outstanding-element-count: 100
+queueconfig:
+  case-update-subscription: event_case-update_rh
+  uac-update-subscription: event_uac-update_rh
+  collection-exercise-update-subscription: event_collection-exercise-update_rh
+  eq-launch-topic: event_eq-launch
+
+cloud-storage:
+  case-schema-name: case
+  uac-schema-name: uac
+  collection-exercise-schema-name: collection-exercise
+  survey-schema-name: survey
+  backoff:
+    initial: 100
+    multiplier: 1.2
+    max: 16000
+    max-attempts: 30
+
+exceptionmanager:
+  connection:
+    scheme: http
+    host: localhost
+    port: 8666
+
+management:
+  endpoints:
+    access:
+      default: none
+  endpoint:
+    health:
+      enabled: true
+  health:
+    pubsub:
+      enabled: false
+  metrics:
+    tags:
+      application: RespondentHomeService
+      pod: ${HOSTNAME}
+  stackdriver:
+    metrics:
+      export:
+        project-id: dummy-project-id
+        step: PT1M
+        enabled: false
+
+messagelogging:
+  logstacktraces: false
+
+logging:
+  profile: DEV
+  level:
+    root: INFO
+    com.google.cloud.spring.pubsub.integration.inbound.PubSubInboundChannelAdapter: ERROR
+

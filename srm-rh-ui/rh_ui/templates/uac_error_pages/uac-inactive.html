@@ -1,0 +1,28 @@
+{%- extends 'base.html' -%}
+{% from "components/breadcrumbs/_macro.njk" import onsBreadcrumbs %}
+
+{% set page_title_value = _('Error - ONS Surveys') %}
+
+{%- block preMain -%}
+    {{ onsBreadcrumbs({
+            "ariaLabel": _('Back'),
+            "itemsList": [
+                {
+                    "url": url_for('i18n.start_bp.start_get'),
+                    "id": "back",
+                    "text": _('Back'),
+                }
+            ]
+        }) }}
+{%- endblock -%}
+
+{%- block main -%}
+    <h1
+        data-ga= "error", 
+        data-ga-category= "UAC-error", 
+        data-ga-label= "uac_questionnaire_closed_error" 
+    >
+        {{ _('This questionnaire has now closed') }}
+    </h1>
+
+{%- endblock main -%}
